@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GiftPool - Split • Settle • Celebrate</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-shell">
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">🎁</div>
+                <div class="brand-text">
+                    <h1>GiftPool</h1>
+                    <span>Split • Settle • Celebrate</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="#" class="nav-item" onclick="openAddMemberModal(); return false;"><i class="fa-solid fa-user-plus"></i> Add Member</a>
+                <a href="#" class="nav-item" onclick="openImportModal(); return false;"><i class="fa-solid fa-file-arrow-down"></i> Import Data <span class="badge-new">NEW</span></a>
+                <a href="#" class="nav-item" onclick="exportToExcel(); return false;"><i class="fa-solid fa-file-excel"></i> Export to Excel</a>
+                <a href="#" class="nav-item" onclick="openPoolsModal(); return false;"><i class="fa-solid fa-folder-open"></i> Pool Library</a>
+            </nav>
+
+            <div class="sidebar-footer-widget">
+                <div class="widget-title"><i class="fa-solid fa-gift text-primary"></i> Total Pool Progress</div>
+                <div class="mini-progress-ring"><span id="sidebarProgressText">0%</span></div>
+                <p id="sidebarProgressAmount">₹0 / ₹0</p>
+                <button onclick="openPoolsModal()" class="btn-sidebar-action">Switch Pools</button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTAINER -->
+        <main class="main-container">
+            <!-- TOP HEADER BAR -->
+            <header class="top-header">
+                <div class="header-pool-selector">
+                    <div class="pool-icon-badge"><i class="fa-solid fa-users-rectangle"></i></div>
+                    <div class="pool-dropdown-group">
+                        <input type="text" id="poolIdInput" value="Team-Gift-Pool" onchange="loadPool()" title="Type Pool Name">
+                        <span class="pool-meta">Firebase Sync Active</span>
+                    </div>
+                    <button onclick="loadPool()" class="btn-secondary-sm"><i class="fa-solid fa-rotate"></i> Load</button>
+                    <button onclick="deleteCurrentPool()" class="btn-secondary-sm" style="color: var(--danger); border-color: var(--danger);" title="Delete Pool"><i class="fa-solid fa-trash-can"></i> Delete Pool</button>
+                </div>
+
+                <div class="header-actions">
+                    <button onclick="toggleDarkMode()" class="btn-icon-top" title="Toggle Theme"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
+                    
+                    <div id="authSection">
+                        <button onclick="openAuthModal()" class="btn-primary" id="openAuthModalBtn" style="padding: 8px 16px; font-size: 0.9rem;">
+                            <i class="fa-solid fa-user-lock"></i> Sign In / Register
+                        </button>
+                        <div class="user-profile-pill" id="userProfilePill" style="display: none;">
+                            <img id="userAvatarImg" src="" alt="Avatar" class="avatar-img" style="width:32px; height:32px; border-radius:50%;">
+                            <div class="user-info">
+                                <strong id="userNameDisplay">User</strong>
+                                <span id="userEmailDisplay">email@gmail.com</span>
+                            </div>
+                            <button onclick="signOutUser()" class="btn-logout" title="Sign Out" style="background:none; border:none; color:var(--danger); cursor:pointer; margin-left:8px;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-scroll-content">
+                
+                <!-- SETUP CARD -->
+                <section id="newPoolSetupCard" class="card p-24" style="display: none; border-left: 5px solid var(--primary); background: linear-gradient(to right, rgba(79,70,229,0.03), transparent);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h2 style="margin: 0; font-size: 1.3rem;"><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Set Up New Pool: <span id="setupPoolTitleDisplay"></span></h2>
+                    </div>
+                    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">Configure your target budget limit and initial participant contribution.</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display:block; font-weight:600; margin-bottom:6px; font-size:0.9rem;">Target Budget Limit (₹)</label>
+                            <input type="number" id="setupBudgetInput" value="5000" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; margin-bottom:6px; font-size:0.9rem;">First Participant Name</label>
+                            <input type="text" id="setupFirstMemberInput" placeholder="e.g., Alex Johnson" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:600; margin-bottom:6px; font-size:0.9rem;">Amount Paid (₹)</label>
+                            <input type="number" id="setupFirstMemberAmountInput" placeholder="e.g., 1000" value="0" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                        </div>
+                    </div>
+                    
+                    <button onclick="initializeNewPoolFromCard()" class="btn-primary"><i class="fa-solid fa-check"></i> Initialize Pool & Save</button>
+                </section>
+
+                <!-- HERO BANNER -->
+                <section class="hero-banner">
+                    <div class="hero-text">
+                        <h2 id="heroWelcomeText">Welcome! 👋</h2>
+                        <h1 id="heroPoolTitle">Team-Gift-Pool</h1>
+                        <p>Track contributions, manage members seamlessly, and monitor your variable budget.</p>
+                    </div>
+                    <div class="hero-budget-card">
+                        <div class="hero-budget-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span><i class="fa-solid fa-wallet"></i> Target Budget Limit</span>
+                            <button onclick="promptChangeBudget()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:2px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;" title="Change Budget">Edit</button>
+                        </div>
+                        <div class="hero-budget-amount">₹<span id="heroBudgetDisplay">5,000</span></div>
+                        <div class="hero-progress-bar-container">
+                            <div class="hero-progress-fill" id="heroProgressBar" style="width: 0%;"></div>
+                        </div>
+                        <div class="hero-progress-footer">
+                            <span>₹<span id="heroCollectedDisplay">0</span> collected</span>
+                            <span id="heroPercentDisplay">0%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- METRICS GRID -->
+                <section class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon success"><i class="fa-solid fa-check"></i></div>
+                        <div class="metric-data"><span class="metric-val" id="metricCollected">₹0</span><span class="metric-lbl">Collected</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon warning"><i class="fa-solid fa-clock"></i></div>
+                        <div class="metric-data"><span class="metric-val" id="metricPending">₹5,000</span><span class="metric-lbl">Still to Collect</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon primary"><i class="fa-solid fa-users"></i></div>
+                        <div class="metric-data"><span class="metric-val" id="metricTotalMembers">0</span><span class="metric-lbl">Total Members</span></div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon info"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div class="metric-data"><span class="metric-val" id="metricFairShare">₹0</span><span class="metric-lbl">Equal Share/Person</span></div>
+                    </div>
+                </section>
+
+                <!-- SETTLEMENT & STATS -->
+                <div class="middle-layout-grid">
+                    <div class="card p-24">
+                        <h3 class="card-title"><i class="fa-solid fa-chart-pie text-primary"></i> Contribution Overview</h3>
+                        <div class="overview-stats-split">
+                            <div class="stat-bars-group">
+                                <div class="stat-bar-row"><span class="dot success"></span> Paid in Full <strong id="statPaidFullCount">0</strong></div>
+                                <div class="stat-bar-row"><span class="dot primary"></span> Partially Paid <strong id="statPartialCount">0</strong></div>
+                                <div class="stat-bar-row"><span class="dot warning"></span> Paid Extra <strong id="statExtraCount">0</strong></div>
+                                <div class="stat-bar-row"><span class="dot danger"></span> Not Paid <strong id="statNotPaidCount">0</strong></div>
+                            </div>
+                            <div class="quick-stats-box">
+                                <h4>Quick Summary</h4>
+                                <div class="qs-item"><span>Total Members</span> <strong id="qsTotal">0</strong></div>
+                                <div class="qs-item"><span>Target Budget Limit</span> <strong>₹<input type="number" id="budgetInput" value="5000" onchange="updateBudget()" style="width:70px; border:none; background:transparent; font-weight:bold; color:var(--text-main);"></strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-24 highlight-top-border" id="settlementCard">
+                        <div class="card-header-flex">
+                            <h3 class="card-title"><i class="fa-solid fa-handshake text-success"></i> Settlement Plan</h3>
+                            <span class="badge-sub" id="settlementTxCount">0 transactions needed</span>
+                        </div>
+                        <p class="card-subtitle">Optimized peer-to-peer debt splitting with instant UPI</p>
+                        <div class="settlement-list-box" id="settlementPlan">
+                            <div class="settlement-row"><span>No settlements needed yet.</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MEMBERS TABLE -->
+                <section class="card p-24" id="membersTableCard">
+                    <div class="table-header-flex">
+                        <div class="table-title-area">
+                            <h3><i class="fa-solid fa-users-line text-primary"></i> Participant Directory</h3>
+                            <p>Manage contributions and balances in real time.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="table-search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="memberSearchInput" placeholder="Search member..." onkeyup="filterMembersTable()">
+                            </div>
+                            <button onclick="openAddMemberModal()" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Add Member</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Paid Amount</th>
+                                    <th>Fair Share</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="participantTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: INSTANT UPI PAYMENT -->
+    <div id="upiModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 380px; text-align: center;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-qrcode text-primary"></i> Instant UPI Pay</h2>
+                <button onclick="closeUpiModal()" class="btn-icon-dark"><i class="fa-solid fa-xmark fa-xl"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc" id="upiModalDesc" style="margin-bottom: 15px; font-weight: 500;"></p>
+                <!-- Generated QR Code Container -->
+                <div style="background: white; padding: 15px; display: inline-block; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 15px;">
+                    <img id="upiQrCodeImg" src="" alt="UPI QR Code" style="width: 180px; height: 180px; display: block;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a id="upiDeepLinkBtn" href="#" target="_blank" class="btn-primary" style="text-decoration: none; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fa-solid fa-mobile-screen-button"></i> Open UPI App (GPay/PhonePe)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS: WELCOME, AUTH, ADD MEMBER, IMPORTER, POOLS -->
+    <div id="welcomeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <h2>🎁 Welcome to GiftPool!</h2>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc" style="margin-bottom: 20px;">Please enter your name to get started:</p>
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="welcomeNameInput" placeholder="Enter your name" style="width:100%; padding:12px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px; font-size:1rem; text-align:center; font-weight:600;">
+                </div>
+                <button onclick="saveWelcomeName()" class="btn-primary w-100" style="padding: 12px; font-size: 1rem;"><i class="fa-solid fa-arrow-right"></i> Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="authModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h2>🔐 Authentication</h2>
+                <button onclick="closeAuthModal()" class="btn-icon-dark"><i class="fa-solid fa-xmark fa-xl"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc" style="margin-bottom: 20px;">Sign in to save your pool activity securely.</p>
+                <button onclick="signInWithGoogle()" class="btn-google-auth" style="width:100%; padding:12px; background:white; color:#333; border:1px solid var(--border); border-radius:8px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer; margin-bottom:20px;">
+                    <i class="fa-brands fa-google" style="color:#ea4335;"></i> Continue with Google
+                </button>
+                <div style="display:flex; align-items:center; text-align:center; color:var(--text-muted); margin-bottom:20px;">
+                    <hr style="flex:1; border-color:var(--border);">
+                    <span style="padding:0 10px; font-size:0.8rem;">OR EMAIL</span>
+                    <hr style="flex:1; border-color:var(--border);">
+                </div>
+                <div style="text-align: left; display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Email Address</label>
+                        <input type="email" id="authEmailInput" placeholder="name@example.com" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Password</label>
+                        <input type="password" id="authPasswordInput" placeholder="••••••••" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="handleEmailSignIn()" class="btn-primary" style="flex:1;">Sign In</button>
+                    <button onclick="handleEmailSignUp()" class="btn-secondary-sm" style="flex:1; padding:10px;">Register</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addMemberModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-user-plus text-primary"></i> Add New Participant</h2>
+                <button onclick="closeAddMemberModal()" class="btn-icon-dark"><i class="fa-solid fa-xmark fa-xl"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="display:block; font-weight:600; margin-bottom:5px; font-size:0.9rem;">Participant Name</label>
+                    <input type="text" id="modalNameInput" placeholder="e.g., Alex Johnson" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display:block; font-weight:600; margin-bottom:5px; font-size:0.9rem;">Amount Paid (₹)</label>
+                    <input type="number" id="modalPaidInput" placeholder="e.g., 500" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                </div>
+                <button onclick="submitAddMemberForm()" class="btn-primary w-100"><i class="fa-solid fa-check"></i> Save Participant</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Smart Data Importer</h2>
+                <button onclick="closeImportModal()" class="btn-icon-dark"><i class="fa-solid fa-xmark fa-xl"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Paste your raw list (Format: <b>Name, Amount</b>).</p>
+                <textarea id="importTextarea" rows="6" placeholder="Alice, ₹1,000&#10;Bob 500" style="width:100%; padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;"></textarea>
+                <button onclick="processImport()" class="btn-primary w-100 mt-15"><i class="fa-solid fa-bolt"></i> Clean & Import</button>
+                <div id="importReport"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="poolsModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📁 Firebase Dashboards Library</h2>
+                <button onclick="closeModal()" class="btn-icon-dark"><i class="fa-solid fa-xmark fa-xl"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Create a new pool or open an existing one.</p>
+                <div class="create-pool-inline" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                    <input type="text" id="newPoolNameInput" placeholder="Enter new pool name..." style="padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                    <input type="number" id="newPoolBudgetInput" placeholder="Enter target budget limit (₹)..." value="5000" style="padding:10px; border:1px solid var(--border); background:var(--bg-color); color:var(--text-main); border-radius:8px;">
+                    <button onclick="createNewPool()" class="btn-primary">Create Pool</button>
+                </div>
+                <div id="poolsGrid" class="pools-grid-box">Fetching pools...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

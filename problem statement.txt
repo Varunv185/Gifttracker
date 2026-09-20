@@ -1,0 +1,7 @@
+ROUND 2  ·  BUILD ROUND
+Chipping in for the farewell gift
+The team is buying a farewell gift for their manager — budget ₹6,000. Everyone agreed to chip in equally, but in practice it’s chaos: some have paid their full share, a few paid only part, one generous soul paid extra to cover a friend, and two people haven’t paid at all. The organiser is constantly asked ‘how much do I still owe?’ and ‘have we collected enough yet?’ At the end the organiser just wants the simplest list of who should pay whom so everyone lands on their fair share.
+Build something so the organiser can track the pool and settle up fairly.
+(The questions the organiser keeps fielding are your clues — and build for any pool and organiser, not just this one. The easier you make it to see shares, balances and what’s left to collect, the better. Start with equal shares and simple balances, then settlements.)
+The Twist
+Your solution must also import a messy list of past contributions — with duplicate entries, the same person’s name spelled differently, amounts written in inconsistent formats, and some invalid rows. Import it, produce correct balances from the cleaned data, and report what was imported, de-duplicated, merged, and rejected.
