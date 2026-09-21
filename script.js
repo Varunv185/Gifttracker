@@ -541,3 +541,14 @@ window.generateSettlementActions = function() {
             `).join('');
     }
 };
+// Mobile Sidebar & Backdrop Toggle Handler
+window.toggleMobileSidebar = function() {
+    const sidebar = document.getElementById('appSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+        if (backdrop) {
+            backdrop.classList.toggle('active');
+        }
+    }
+};

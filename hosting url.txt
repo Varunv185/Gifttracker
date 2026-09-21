@@ -1,0 +1,3 @@
+Project Console: https://console.firebase.google.com/project/gifttracker-82492/overview
+
+Hosting URL: https://gifttracker-82492.web.app
